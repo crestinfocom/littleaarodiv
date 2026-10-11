@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { open, goHash } from '../support/app';
+import { open, goHash, stubInbox } from '../support/app';
 
 test.describe('Public website', () => {
   test('home page renders all major sections', async ({ page }) => {
@@ -56,6 +56,7 @@ test.describe('Public website', () => {
   });
 
   test('admissions enquiry form submits and shows confirmation', async ({ page }) => {
+    await stubInbox(page);
     await open(page, '/admissions');
     const form = page.locator('#app form.f').first();
     await form.locator('input[name="child"]').fill('Riya Test');
@@ -70,6 +71,7 @@ test.describe('Public website', () => {
   });
 
   test('contact form submits and shows a toast', async ({ page }) => {
+    await stubInbox(page);
     await open(page, '/contact');
     const form = page.locator('#app form.f').first();
     await form.locator('input[name="name"]').fill('Test Family');

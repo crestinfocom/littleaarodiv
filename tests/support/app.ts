@@ -87,6 +87,40 @@ export async function stabilize(page: Page): Promise<void> {
   await page.locator('#toast').evaluateAll((els) => (els.forEach((e) => ((e as HTMLElement).innerHTML = ''))));
 }
 
+/** The admissions inbox every website form is emailed to. */
+export const INBOX_EMAIL = 'crestinfocom@gmail.com';
+
+export interface InboxCall {
+  url: string;
+  method: string;
+  body: Record<string, unknown>;
+}
+
+/**
+ * Intercept the FormSubmit AJAX endpoint so tests never send real email.
+ * Returns the live array of captured calls for assertions.
+ */
+export async function stubInbox(page: Page): Promise<InboxCall[]> {
+  const calls: InboxCall[] = [];
+  await page.route('**/formsubmit.co/**', async (route) => {
+    const req = route.request();
+    let body: Record<string, unknown> = {};
+    try {
+      body = (req.postDataJSON() as Record<string, unknown>) ?? {};
+    } catch {
+      body = { raw: req.postData() };
+    }
+    calls.push({ url: req.url(), method: req.method(), body });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ success: 'true', message: 'stubbed by test' }),
+    });
+  });
+  return calls;
+}
+
 /** Accept or provide a value for the next native dialog (confirm/prompt/alert). */
 export function acceptDialog(page: Page, promptValue?: string): void {
   page.once('dialog', (d) => {
