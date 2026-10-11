@@ -30,6 +30,17 @@ const LOGO_SRC='/assets/logo.png';
 const MARK_SRC='/assets/mark.png';
 const brand=(light,cls='')=>`<a class="brand ${light?'dark':''} ${cls}" href="#/home" aria-label="Little Aarodiv – Tiny Hands, Endless Possibilities"><img class="logo-img" src="${LOGO_SRC}" alt="Little Aarodiv – Tiny Hands, Endless Possibilities"></a>`;
 
+/* ============ EMAIL DELIVERY ============ */
+/* All website forms (application enquiry + contact message) are emailed to the
+   admissions inbox through FormSubmit's AJAX endpoint. Best-effort: failures
+   never block the visitor's on-screen confirmation. */
+const INBOX_EMAIL='crestinfocom@gmail.com';
+function sendToInbox(data){
+ try{
+  return fetch('https://formsubmit.co/ajax/'+INBOX_EMAIL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({_subject:'New enquiry – Little Aarodiv',_template:'table',_captcha:'false',...data})}).then(r=>r.ok).catch(()=>false);
+ }catch(e){return Promise.resolve(false)}
+}
+
 /* ============ IMAGES ============ */
 const LOCAL={_a:'/assets/room.jpg',_r:'/assets/artwork.jpg'};
 LOCAL.art=LOCAL._r;LOCAL.room=LOCAL._a;const FB=[LOCAL.art,LOCAL.room];
@@ -211,6 +222,7 @@ function admissions(){return `<div class="page-hero container"><span class="eyeb
  ${[['What is the admission age?','We welcome children from 6 months (Infant Care) up to 10 years (After-School Club).'],['What documents are needed?','Birth certificate, immunisation record, 2 passport photos and parent ID proof.'],['Do you provide meals?','Yes — freshly cooked, nutritionist-approved meals and snacks are included for daycare programs.'],['Is transport available?','Yes, GPS-tracked vans with a lady attendant cover major areas within 6 km.'],['How do I stay updated?','Our Parent Portal shares attendance, daily reports, photos, fees and notices in real time.']].map(q=>`<details><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join('')}</div></div></section>`}
 function submitInquiry(e){e.preventDefault();const _t=e.target;showLoader('Sending your enquiry…');setTimeout(()=>{hideLoader();_submitInquiry(_t)},800);return false}
 function _submitInquiry(target){const e={target,preventDefault(){}};const f=Object.fromEntries(new FormData(e.target));db.inquiries.unshift({id:uid(),...f,date:todayStr(),status:'New'});save();e.target.reset();UI.prog='';
+ sendToInbox({_subject:'New admission enquiry – '+(f.child||'Little Aarodiv'),'Form':'Admission enquiry','Child name':f.child,'Child age':f.age,'Parent name':f.parent,'Phone':f.phone,'Email':f.email,'Program':f.program,'Notes':f.notes,'Submitted':todayStr()});
  $('#modal').innerHTML=`<div class="mback"><div class="mbox" style="text-align:center;max-width:460px"><div style="font-size:56px">🎉</div><h3 style="font-size:28px;margin:10px 0">Thank you!</h3><p class="muted">Our admissions team will call you within 24 hours to schedule your campus tour.</p><button class="btn btn-p" style="margin-top:22px" onclick="closeModal()">Wonderful</button></div></div>`;return false}
 
 function contact(){const s=db.settings;return `<div class="page-hero container"><span class="eyebrow">Contact</span><h1>We’d love to <em>hear</em> from you</h1><p>Questions, visits or just a hello — our team is here for you.</p></div>
@@ -218,14 +230,16 @@ function contact(){const s=db.settings;return `<div class="page-hero container">
  <div class="split" style="align-items:stretch"><div class="card"><h3 style="font-size:26px;margin-bottom:20px">Send us a message</h3><form class="f" onsubmit="return submitMsg(event)"><div class="f2"><div><label>Your name *</label><input name="name" required></div><div><label>Phone</label><input name="phone"></div></div><div><label>Email *</label><input name="email" type="email" required></div><div><label>Subject</label><input name="subject"></div><div><label>Message *</label><textarea name="message" required></textarea></div><button class="btn btn-p" style="justify-self:start">Send Message</button></form></div>
  <div class="map"><iframe loading="lazy" src="https://maps.google.com/maps?q=Banjara%20Hills%20Hyderabad&z=14&output=embed"></iframe></div></div></div></section>`}
 function submitMsg(e){e.preventDefault();const _t=e.target;showLoader('Sending message…');setTimeout(()=>{hideLoader();_submitMsg(_t)},700);return false}
-function _submitMsg(target){const e={target,preventDefault(){}};db.messages.unshift({id:uid(),...Object.fromEntries(new FormData(e.target)),date:todayStr(),read:false});save();e.target.reset();toast('Message sent — we’ll get back to you soon 💛');return false}
+function _submitMsg(target){const e={target,preventDefault(){}};const f=Object.fromEntries(new FormData(e.target));db.messages.unshift({id:uid(),...f,date:todayStr(),read:false});save();e.target.reset();
+ sendToInbox({_subject:'New contact message – '+(f.subject||'Little Aarodiv'),'Form':'Contact message','Name':f.name,'Phone':f.phone,'Email':f.email,'Subject':f.subject,'Message':f.message,'Submitted':todayStr()});
+ toast('Message sent — we’ll get back to you soon 💛');return false}
 
 /* ============ LOGIN ============ */
 const DEMO={admin:['admin@littleaarodiv.com','admin123'],teacher:['teacher@littleaarodiv.com','teacher123'],parent:['parent@littleaarodiv.com','parent123']};
 function loginPage(){const r=UI.role||'parent';return `<div class="auth"><div class="ph">${`<img src="${IMG(P.hero)}" alt="">`}<div class="ov"><div class="ov-logo"><img src="${MARK_SRC}" alt=""></div><h2>Every day, a little <em>wonder</em>.</h2><p>Stay connected to your child’s world — attendance, daily moments, fees and more.</p></div></div>
  <div class="auth-f"><div class="auth-box">${brand()}<h1 style="font-size:36px;margin-top:34px">Welcome back</h1><p class="muted">Sign in to your Little Aarodiv portal.</p>
  <div class="tabs">${['parent','teacher','admin'].map(x=>`<button class="${r===x?'on':''}" onclick="UI.role='${x}';render()">${x[0].toUpperCase()+x.slice(1)}</button>`).join('')}</div>
- <form class="f" onsubmit="return doLogin(event)"><div><label>Email</label><input id="lem" type="email" value="${DEMO[r][0]}" required></div><div><label>Password</label><input id="lpw" type="password" value="${DEMO[r][1]}" required></div><button class="btn btn-p">Sign in as ${r[0].toUpperCase()+r.slice(1)} →</button></form>
+ <form class="f" onsubmit="return doLogin(event)"><div><label>Email *</label><input id="lem" type="email" value="${DEMO[r][0]}" required></div><div><label>Password *</label><input id="lpw" type="password" value="${DEMO[r][1]}" required></div><button class="btn btn-p">Sign in as ${r[0].toUpperCase()+r.slice(1)} →</button></form>
  <div class="demo">🔑 <b>Demo access</b> — credentials are pre-filled for the selected role.<br>Admin: admin@littleaarodiv.com / admin123<br>Teacher: teacher@littleaarodiv.com / teacher123<br>Parent: parent@littleaarodiv.com / parent123</div>
  <p style="margin-top:20px;font-size:14px"><a href="#/home" class="muted">← Back to website</a></p></div></div></div>`}
 function doLogin(e){e.preventDefault();const em=$('#lem').value.trim().toLowerCase(),pw=$('#lpw').value;const u=db.users.find(x=>x.email.toLowerCase()===em&&x.pass===pw);

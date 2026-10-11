@@ -75,6 +75,24 @@ Copy `.env.local.example` to `.env.local` and adjust as needed. Key settings:
 
 `.env` and `.env.local` are gitignored; only `.env.local.example` is committed.
 
+## Website form email delivery
+
+Both public forms — the Admissions **enquiry** form and the Contact **message**
+form — are emailed to the admissions inbox `crestinfocom@gmail.com` in addition
+to being stored in the in-browser demo data (and shown in the admin console).
+
+Delivery uses [FormSubmit](https://formsubmit.co) over its AJAX endpoint
+(`https://formsubmit.co/ajax/crestinfocom@gmail.com`), so no server-side SMTP
+configuration or credentials are needed. Key behaviour:
+
+- The recipient address is a single constant (`INBOX_EMAIL`) in `public/app.js`.
+- Submissions are **best-effort**: if the network call fails (offline, blocked
+  preview, etc.) the on-screen confirmation still appears and the record is still
+  saved locally.
+- FormSubmit requires a **one-time activation**: the first real submission sends
+  a confirmation email to `crestinfocom@gmail.com`; the link in that email must
+  be clicked before further messages are delivered.
+
 ## Neon sync (kept to a minimum)
 
 The app is **local-first**: normal browsing never touches Neon. Neon is read
@@ -150,5 +168,5 @@ tests/ui/          responsive, visual and accessibility specs
 tests/support/     shared Playwright helpers
 ```
 
-Fonts and photos are vendored under `public/assets/` so the app makes no
-external requests at runtime.
+Fonts and photos are vendored under `public/assets/`, and the map and form-email
+integrations are the only external requests the app makes at runtime.

@@ -64,8 +64,8 @@ Run one with `--project=desktop` or `--project=mobile`.
 
 ```
 tests/
-  support/app.ts              shared helpers (determinism, sessions, login)
-  e2e/                        smoke, public-site, auth, admin, teacher, parent
+  support/app.ts              shared helpers (determinism, sessions, login, inbox stub)
+  e2e/                        smoke, public-site, enquiry-form, auth, admin, teacher, parent
   ui/                         a11y.spec.ts, visual.spec.ts, responsive.mobile.spec.ts
   ui/visual.spec.ts-snapshots recorded baseline images (*-desktop-win32.png)
 ```
@@ -94,3 +94,7 @@ with `npm run report`.
   **not** required for them — the SPA uses its in-browser demo data.
 - The admin **Neon Sync** spec asserts the panel degrades gracefully when the API
   is down, so it is safe to run with or without the backend.
+- Form submissions email `crestinfocom@gmail.com` through FormSubmit. Every spec
+  that submits a form calls the `stubInbox(page)` helper (in `tests/support/app.ts`)
+  to intercept `formsubmit.co`, capture the request payload for assertions and
+  guarantee **no real email is ever sent** during a test run.
