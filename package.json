@@ -1,0 +1,37 @@
+{
+  "name": "little-aarodiv",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Little Aarodiv - premium daycare & preschool website with admin, teacher and parent portals.",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/start.mjs",
+    "start:local": "node scripts/start.mjs local",
+    "db:up": "docker compose -f local-dev/docker-compose.yml up -d",
+    "db:down": "docker compose -f local-dev/docker-compose.yml down",
+    "db:reset": "docker compose -f local-dev/docker-compose.yml down -v && docker compose -f local-dev/docker-compose.yml up -d",
+    "db:ps": "docker compose -f local-dev/docker-compose.yml ps",
+    "db:logs": "docker compose -f local-dev/docker-compose.yml logs -f db",
+    "server": "node server/index.mjs",
+    "sync:neon": "node server/sync-cli.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "test": "playwright test",
+    "test:e2e": "playwright test tests/e2e",
+    "test:ui": "playwright test tests/ui",
+    "test:headed": "playwright test --headed",
+    "test:devtools": "node scripts/with-devtools.mjs",
+    "test:update": "playwright test --update-snapshots",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "vite": "^8.3.4"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "pg": "^8.23.1"
+  }
+}

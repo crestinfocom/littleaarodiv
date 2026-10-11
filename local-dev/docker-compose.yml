@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: little-aarodiv-db
+    restart: unless-stopped
+    env_file:
+      - ../.env.local
+    environment:
+      # NOTE: deliberately NOT using ${POSTGRES_USER}/${POSTGRES_PASSWORD}/${POSTGRES_DB}
+      # here. Compose also auto-loads the project .env (Neon/Vercel credentials),
+      # which sets POSTGRES_USER to the remote (Neon) owner — interpolating those
+      # names would leak the remote credentials into this local container.
+      # User/password/db come exclusively from ../.env.local via env_file.
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    shm_size: 256mb
+
+  # Lightweight read-only DB browser for inspecting the local mirror.
+  adminer:
+    image: adminer:latest
+    container_name: little-aarodiv-adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: pepa-linha
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+# Named volume so local data survives `docker compose down`.
+volumes:
+  pgdata:
+    name: little-aarodiv-pgdata

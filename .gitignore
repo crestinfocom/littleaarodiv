@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.vite/
+test-results/
+playwright-report/
+blob-report/
+*.log
+.DS_Store
+Thumbs.db
+
+# Secrets & local environment — never commit
+.env
+.env.*
+!.env.local.example
+
+.vercel
